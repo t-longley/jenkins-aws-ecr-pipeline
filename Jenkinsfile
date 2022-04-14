@@ -10,6 +10,7 @@ pipeline {
             steps{
                 script{
                     dockerImage = docker.build registry + ":$BUILD_NUMBER"
+                    sh 'ech $dockerImage'
                 }
             }
         }
@@ -19,6 +20,15 @@ pipeline {
                     docker.withRegistry("https://" + registry, "ecr:us-east-1:" + registryCredential) {
                         dockerImage.push()
                     }
+                }
+            }
+        }
+
+        stage('Deploy docker iamge to AWS ECS container') {
+            steps {
+                withAWS(credentials: 'IAM_SAA', region: 'us-east-1') {
+                    sh "chmod +x ./jenkins_ecr.sh"
+                    sh ".jenkins_ecr.sh"
                 }
             }
         }
